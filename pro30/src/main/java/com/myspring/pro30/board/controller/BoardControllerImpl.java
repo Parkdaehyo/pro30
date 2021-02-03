@@ -1,6 +1,7 @@
 package com.myspring.pro30.board.controller;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -27,6 +28,7 @@ import org.springframework.web.servlet.ModelAndView;
 
 import com.myspring.pro30.board.service.BoardService;
 import com.myspring.pro30.board.vo.ArticleVO;
+import com.myspring.pro30.board.vo.ImageVO;
 import com.myspring.pro30.member.vo.MemberVO;
 
 
@@ -48,76 +50,63 @@ public class BoardControllerImpl  implements BoardController{
 		return mav;
 		
 	}
-	
-	@Override
-	@RequestMapping(value="/board/addNewArticle.do" ,method = RequestMethod.POST)
-	@ResponseBody
-	public ResponseEntity addNewArticle(MultipartHttpServletRequest multipartRequest, 
-	HttpServletResponse response) throws Exception {
-		multipartRequest.setCharacterEncoding("utf-8");
-		Map<String,Object> articleMap = new HashMap<String, Object>();
-		Enumeration enu=multipartRequest.getParameterNames();
-		while(enu.hasMoreElements()){
-			String name=(String)enu.nextElement();
-			String value=multipartRequest.getParameter(name);
-			articleMap.put(name,value);
-		}
-		
-		String imageFileName= upload(multipartRequest);
-		HttpSession session = multipartRequest.getSession();
-		MemberVO memberVO = (MemberVO) session.getAttribute("member");
-		String id = memberVO.getId();
-		articleMap.put("parentNO", 0);
-		articleMap.put("id", id);
-		articleMap.put("imageFileName", imageFileName);
-		
-		String message;
-		ResponseEntity resEnt=null;
-		HttpHeaders responseHeaders = new HttpHeaders();
-		responseHeaders.add("Content-Type", "text/html; charset=utf-8");
-		try {
-			int articleNO = boardService.addNewArticle(articleMap);
-			if(imageFileName!=null && imageFileName.length()!=0) {
-				File srcFile = new 
-				File(ARTICLE_IMAGE_REPO+"\\"+"temp"+"\\"+imageFileName);
-				File destDir = new File(ARTICLE_IMAGE_REPO+"\\"+articleNO);
-				FileUtils.moveFileToDirectory(srcFile, destDir,true);
-			}
-	
-			message = "<script>";
-			message += " alert('������ �߰��߽��ϴ�.');";
-			message += " location.href='"+multipartRequest.getContextPath()+"/board/listArticles.do'; ";
-			message +=" </script>";
-		    resEnt = new ResponseEntity(message, responseHeaders, HttpStatus.CREATED);
-		}catch(Exception e) {
-			File srcFile = new File(ARTICLE_IMAGE_REPO+"\\"+"temp"+"\\"+imageFileName);
-			srcFile.delete();
-			
-			message = " <script>";
-			message +=" alert('������ �߻��߽��ϴ�. �ٽ� �õ��� �ּ���');');";
-			message +=" location.href='"+multipartRequest.getContextPath()+"/board/articleForm.do'; ";
-			message +=" </script>";
-			resEnt = new ResponseEntity(message, responseHeaders, HttpStatus.CREATED);
-			e.printStackTrace();
-		}
-		return resEnt;
-	}
-	
-	
-	//�Ѱ��� �̹��� �����ֱ�
-	@RequestMapping(value="/board/viewArticle.do" ,method = RequestMethod.GET)
-	public ModelAndView viewArticle(@RequestParam("articleNO") int articleNO,
-                                    HttpServletRequest request, HttpServletResponse response) throws Exception{
-		String viewName = (String)request.getAttribute("viewName");
-		articleVO=boardService.viewArticle(articleNO);
-		ModelAndView mav = new ModelAndView();
-		mav.setViewName(viewName);
-		mav.addObject("article", articleVO);
-		return mav;
-	}
-	
 	/*
-	//���� �̹��� �����ֱ�
+	 * @Override
+	 * 
+	 * @RequestMapping(value="/board/addNewArticle.do" ,method = RequestMethod.POST)
+	 * 
+	 * @ResponseBody public ResponseEntity addNewArticle(MultipartHttpServletRequest
+	 * multipartRequest, HttpServletResponse response) throws Exception {
+	 * multipartRequest.setCharacterEncoding("utf-8"); Map<String,Object> articleMap
+	 * = new HashMap<String, Object>(); Enumeration
+	 * enu=multipartRequest.getParameterNames(); while(enu.hasMoreElements()){
+	 * String name=(String)enu.nextElement(); String
+	 * value=multipartRequest.getParameter(name); articleMap.put(name,value); }
+	 * 
+	 * String imageFileName= upload(multipartRequest); HttpSession session =
+	 * multipartRequest.getSession(); MemberVO memberVO = (MemberVO)
+	 * session.getAttribute("member"); String id = memberVO.getId();
+	 * articleMap.put("parentNO", 0); articleMap.put("id", id);
+	 * articleMap.put("imageFileName", imageFileName);
+	 * 
+	 * String message; ResponseEntity resEnt=null; HttpHeaders responseHeaders = new
+	 * HttpHeaders(); responseHeaders.add("Content-Type",
+	 * "text/html; charset=utf-8"); try { int articleNO =
+	 * boardService.addNewArticle(articleMap); if(imageFileName!=null &&
+	 * imageFileName.length()!=0) { File srcFile = new
+	 * File(ARTICLE_IMAGE_REPO+"\\"+"temp"+"\\"+imageFileName); File destDir = new
+	 * File(ARTICLE_IMAGE_REPO+"\\"+articleNO);
+	 * FileUtils.moveFileToDirectory(srcFile, destDir,true); }
+	 * 
+	 * message = "<script>"; message += " alert('������ �߰��߽��ϴ�.');"; message +=
+	 * " location.href='"+multipartRequest.getContextPath()
+	 * +"/board/listArticles.do'; "; message +=" </script>"; resEnt = new
+	 * ResponseEntity(message, responseHeaders, HttpStatus.CREATED);
+	 * }catch(Exception e) { File srcFile = new
+	 * File(ARTICLE_IMAGE_REPO+"\\"+"temp"+"\\"+imageFileName); srcFile.delete();
+	 * 
+	 * message = " <script>"; message
+	 * +=" alert('������ �߻��߽��ϴ�. �ٽ� �õ��� �ּ���');');"; message
+	 * +=" location.href='"+multipartRequest.getContextPath()
+	 * +"/board/articleForm.do'; "; message +=" </script>"; resEnt = new
+	 * ResponseEntity(message, responseHeaders, HttpStatus.CREATED);
+	 * e.printStackTrace(); } return resEnt; }
+	 */
+	
+//	//�Ѱ��� �̹��� �����ֱ�
+//	@RequestMapping(value="/board/viewArticle.do" ,method = RequestMethod.GET)
+//	public ModelAndView viewArticle(@RequestParam("articleNO") int articleNO,
+//                                    HttpServletRequest request, HttpServletResponse response) throws Exception{
+//		String viewName = (String)request.getAttribute("viewName");
+//		articleVO=boardService.viewArticle(articleNO);
+//		ModelAndView mav = new ModelAndView();
+//		mav.setViewName(viewName);
+//		mav.addObject("article", articleVO);
+//		return mav;
+//	}
+//	
+	
+	//다중이미지 보여주기
 	@RequestMapping(value="/board/viewArticle.do" ,method = RequestMethod.GET)
 	public ModelAndView viewArticle(@RequestParam("articleNO") int articleNO,
 			  HttpServletRequest request, HttpServletResponse response) throws Exception{
@@ -128,7 +117,7 @@ public class BoardControllerImpl  implements BoardController{
 		mav.addObject("articleMap", articleMap);
 		return mav;
 	}
-   */
+   
 	
 
 	
@@ -145,8 +134,9 @@ public class BoardControllerImpl  implements BoardController{
 		String value=multipartRequest.getParameter(name);
 		articleMap.put(name,value);
 	}
-	
-	String imageFileName= upload(multipartRequest);
+	//	String imageFileName= upload(multipartRequest);
+	//List<String> imageFileName= upload(multipartRequest);
+	String imageFileName = null;
 	HttpSession session = multipartRequest.getSession();
 	MemberVO memberVO = (MemberVO) session.getAttribute("member");
 	String id = memberVO.getId();
@@ -160,7 +150,7 @@ public class BoardControllerImpl  implements BoardController{
 	responseHeaders.add("Content-Type", "text/html; charset=utf-8");
     try {
        boardService.modArticle(articleMap);
-       if(imageFileName!=null && imageFileName.length()!=0) {
+       if(imageFileName!=null && imageFileName.length()!=0) { //if(imageFileName!=null && imageFileName.length()!=0)
          File srcFile = new File(ARTICLE_IMAGE_REPO+"\\"+"temp"+"\\"+imageFileName);
          File destDir = new File(ARTICLE_IMAGE_REPO+"\\"+articleNO);
          FileUtils.moveFileToDirectory(srcFile, destDir, true);
@@ -228,9 +218,7 @@ public class BoardControllerImpl  implements BoardController{
   }
   
   
-  
-/*
-  //���� �̹��� �� �߰��ϱ�
+  // 다중 글 이미지 추가하기
   @Override
   @RequestMapping(value="/board/addNewArticle.do" ,method = RequestMethod.POST)
   @ResponseBody
@@ -246,7 +234,7 @@ public class BoardControllerImpl  implements BoardController{
 		articleMap.put(name,value);
 	}
 	
-	//�α��� �� ���ǿ� ����� ȸ�� �������� �۾��� ���̵� ���ͼ� Map�� �����մϴ�.
+	//로그인 시 세션에 저장된 회원 정보에서 글쓴이 아이디를 얻어와서 Map에 저장한다.
 	HttpSession session = multipartRequest.getSession();
 	MemberVO memberVO = (MemberVO) session.getAttribute("member");
 	String id = memberVO.getId();
@@ -306,7 +294,6 @@ public class BoardControllerImpl  implements BoardController{
 	return resEnt;
   }
 	
-*/
 
 	
 
@@ -318,30 +305,24 @@ public class BoardControllerImpl  implements BoardController{
 		return mav;
 	}
 
-	//�Ѱ� �̹��� ���ε��ϱ�
-	private String upload(MultipartHttpServletRequest multipartRequest) throws Exception{
-		String imageFileName= null;
-		Iterator<String> fileNames = multipartRequest.getFileNames();
-		
-		while(fileNames.hasNext()){
-			String fileName = fileNames.next();
-			MultipartFile mFile = multipartRequest.getFile(fileName);
-			imageFileName=mFile.getOriginalFilename();
-			File file = new File(ARTICLE_IMAGE_REPO +"\\"+ fileName);
-			if(mFile.getSize()!=0){ //File Null Check
-				if(! file.exists()){ //��λ� ������ �������� ���� ���
-					if(file.getParentFile().mkdirs()){ //��ο� �ش��ϴ� ���丮���� ����
-							file.createNewFile(); //���� ���� ����
-					}
-				}
-				mFile.transferTo(new File(ARTICLE_IMAGE_REPO +"\\"+"temp"+ "\\"+imageFileName)); //�ӽ÷� ����� multipartFile�� ���� ���Ϸ� ����
-			}
-		}
-		return imageFileName;
-	}
-	
 	/*
-	//���� �̹��� ���ε��ϱ�
+	 * //�Ѱ� �̹��� ���ε��ϱ� private String upload(MultipartHttpServletRequest
+	 * multipartRequest) throws Exception{ String imageFileName= null;
+	 * Iterator<String> fileNames = multipartRequest.getFileNames();
+	 * 
+	 * while(fileNames.hasNext()){ String fileName = fileNames.next(); MultipartFile
+	 * mFile = multipartRequest.getFile(fileName);
+	 * imageFileName=mFile.getOriginalFilename(); File file = new
+	 * File(ARTICLE_IMAGE_REPO +"\\"+ fileName); if(mFile.getSize()!=0){ //File Null
+	 * Check if(! file.exists()){ //��λ� ������ �������� ���� ���
+	 * if(file.getParentFile().mkdirs()){ //��ο� �ش��ϴ� ���丮���� ����
+	 * file.createNewFile(); //���� ���� ���� } } mFile.transferTo(new
+	 * File(ARTICLE_IMAGE_REPO +"\\"+"temp"+ "\\"+imageFileName)); //�ӽ÷� �����
+	 * multipartFile�� ���� ���Ϸ� ���� } } return imageFileName; }
+	 */
+	
+	
+	//다중 이미지 업로드하기
 	private List<String> upload(MultipartHttpServletRequest multipartRequest) throws Exception{
 		List<String> fileList= new ArrayList<String>();
 		Iterator<String> fileNames = multipartRequest.getFileNames();
@@ -362,5 +343,5 @@ public class BoardControllerImpl  implements BoardController{
 		}
 		return fileList;
 	}
-	*/
+	
 }
